@@ -1,0 +1,66 @@
+This notebook is to play with the fixedpoint `r` and `E` method.
+
+## Flat Case Setup
+
+Package boilerplate. 
+
+```julia
+using Pkg 
+pkg"activate .; instantiate; precompile"
+using CSV, Plots, JSON, BenchmarkTools, Parameters, PerlaTonettiWaugh, DataFrames, Suppressor
+gr(fmt = :png)
+```
+
+Define our specific parameters. 
+
+```julia 
+d_T = parameter_defaults().d_T; 
+
+parameters = parameter_defaults(d_0 = d_T + eps()) # as close to flat as we can get 
+settings = settings_defaults(fixedpoint_iterations = 5); # doesn't really finish beyond this
+```
+
+In particular, we care about
+
+```julia 
+@unpack fixedpoint_ftol, fixedpoint_m, fixedpoint_beta, fixedpoint_iterations, fixedpoint_x0 = settings;
+@show fixedpoint_ftol, fixedpoint_m, fixedpoint_beta, fixedpoint_iterations, fixedpoint_x0
+```
+
+Where the last one is: 
+
+```julia 
+default_fixedpoint_x0(parameters, settings)
+```
+
+## Flat Experiment
+
+Let's run it. While it would be best to use Debugger or Rebugger or something, currently we're just using `@show` to spit out the norm difference `norm(new_r_tilde - (rho + delta * ones(Nts))`. To get something to plot, we can spit out the `new_r_tilde` itself, for example.
+
+```julia 
+sol = solve_transition(parameters, settings);
+solved = sol.results;
+```
+
+## Plots 
+
+```julia
+plot_Ω = plot(solved.t, solved.Ω, label = "Omega", lw = 3)
+plot_residual = plot(solved.t, solved.entry_residual, label = "entry_residual", lw = 3)
+plot(plot_Ω, plot_residual, layout = (2,1))
+```
+
+Here are the static equations
+
+```julia
+plot1 = plot(solved.t, solved.L_tilde, label = "L_tilde", lw = 3)
+plot2 = plot(solved.t, solved.z_bar, label = "z_bar", lw = 3)
+plot3 = plot(solved.t, solved.π_min, label = "pi_min", lw = 3)
+plot4 = plot(solved.t, solved.λ_ii, label = "lambda_ii", lw = 3)
+plot5 = plot(solved.t, solved.c, label = "c", lw = 3)
+plot6 = plot(solved.t, solved.E, label = "E", lw = 3)
+plot7 = plot(solved.t, solved.π_rat, label = "pi_rat", lw = 3)
+plot8 = plot(solved.t, solved.r̃, label = "r_tilde", lw = 3)
+plot9 = plot(solved.t, solved.entry_residual, label = "entry_residual", lw = 3)
+plot(plot1, plot2, plot3, plot4, plot5, plot6, plot7, plot8, plot9, layout=(3,3), size = (1000, 1000))
+```

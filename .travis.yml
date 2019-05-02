@@ -1,0 +1,12 @@
+# Documentation: http://docs.travis-ci.com/user/languages/julia/
+os:
+  - linux
+notifications:
+  email: false
+sudo: required
+services:
+  - docker
+before_install:
+  - docker pull julia:1.1.0-stretch # for now, eventually will be QELAP+Julia
+script:
+- docker run -it --rm -v "$PWD":/usr/myapp -w /usr/myapp julia julia --project=Project.toml --check-bounds=yes --color=yes -e "using Pkg; Pkg.build(); Pkg.test(coverage=true)"
